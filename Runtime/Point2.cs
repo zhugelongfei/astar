@@ -1,4 +1,4 @@
-﻿namespace AStar
+﻿namespace Lonfee.AStar
 {
     public class Point2 : Pool.IPoolItem
     {
