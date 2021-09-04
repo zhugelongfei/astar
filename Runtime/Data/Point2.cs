@@ -1,6 +1,6 @@
 ﻿namespace Lonfee.AStar
 {
-    public class Point2 : Lonfee.ObjectPool.IPoolObject
+    public struct Point2
     {
         public int x;
         public int y;
@@ -10,28 +10,35 @@
             get { return x + (y << 16); }
         }
 
-        public Point2 InitData(int x, int y)
+        public Point2(int x, int y)
         {
             this.x = x;
             this.y = y;
-            return this;
         }
 
-        public void OnPop()
+        public static Point2 operator -(Point2 a, Point2 b)
         {
-
+            return new Point2(a.x - b.x, a.y - b.y);
         }
 
-        public void OnPush()
+        public static Point2 operator +(Point2 a, Point2 b)
         {
-            x = 0;
-            y = 0;
+            return new Point2(a.x + b.x, a.y + b.y);
         }
 
-        public void OnDestroy()
+        public static Point2 operator *(Point2 p, int val)
         {
-
+            return new Point2(p.x * val, p.y * val);
         }
 
+        public static bool operator ==(Point2 a, Point2 b)
+        {
+            return a.x == b.x && a.y == b.y;
+        }
+
+        public static bool operator !=(Point2 a, Point2 b)
+        {
+            return a.x != b.x || a.y != b.y;
+        }
     }
 }
