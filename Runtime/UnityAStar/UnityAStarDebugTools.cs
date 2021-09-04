@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
-using AStar;
+using Lonfee.AStar;
+using Lonfee.ObjectPool;
 using System.Collections.Generic;
 
 public class UnityAStarDebugTools : IAstarDebug
@@ -12,7 +13,7 @@ public class UnityAStarDebugTools : IAstarDebug
     private GameObject cubeObjRoot;                     //方块的挂载点
     private List<Vector3> findPath;
 
-    public class CubeItem : Pool.IPoolItem
+    public class CubeItem : IPoolObject
     {
         private GameObject cube;
 
@@ -21,17 +22,17 @@ public class UnityAStarDebugTools : IAstarDebug
             cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         }
 
-        public void DestroyObject()
+        public void OnDestroy()
         {
             Object.Destroy(cube);
         }
 
-        public void PopCallBack()
+        public void OnPop()
         {
             cube.SetActive(true);
         }
 
-        public void PushCallBack()
+        public void OnPush()
         {
             cube.name = "Idle";
             cube.SetActive(false);
@@ -42,7 +43,7 @@ public class UnityAStarDebugTools : IAstarDebug
             cube.transform.parent = parent;
             cube.transform.localPosition = position;
             cube.transform.localScale = new Vector3(scale, scale, scale);
-            cube.renderer.material.color = color;
+            cube.GetComponent<Renderer>().material.color = color;
 
             return this;
         }
@@ -53,7 +54,7 @@ public class UnityAStarDebugTools : IAstarDebug
         }
     }
 
-    private Pool.SimpleObjectPool<CubeItem> pool = new Pool.SimpleObjectPool_DefaultCreateItemFunction<CubeItem>(int.MaxValue);
+    private ObjectPool<CubeItem> pool = new ObjectPool_DefaultFactory<CubeItem>(int.MaxValue);
 
     public void Init()
     {
@@ -61,7 +62,7 @@ public class UnityAStarDebugTools : IAstarDebug
             cubeObjRoot = new GameObject();
         cubeObjRoot.name = "Path Root";
 
-        pool.PushAllUseItem();
+        pool.PushAllUsedObject();
     }
 
     /// <summary>

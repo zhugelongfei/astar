@@ -1,6 +1,6 @@
 ﻿namespace Lonfee.AStar
 {
-    public class Point2 : Pool.IPoolItem
+    public class Point2 : Lonfee.ObjectPool.IPoolObject
     {
         public int x;
         public int y;
@@ -17,20 +17,21 @@
             return this;
         }
 
-        public void DestroyObject()
+        public void OnPop()
         {
 
         }
 
-        public void PopCallBack()
-        {
-
-        }
-
-        public void PushCallBack()
+        public void OnPush()
         {
             x = 0;
             y = 0;
         }
+
+        public void OnDestroy()
+        {
+
+        }
+
     }
 }

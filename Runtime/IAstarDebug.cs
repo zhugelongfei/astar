@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AStar
+namespace Lonfee.AStar
 {
     public interface IAstarDebug
     {

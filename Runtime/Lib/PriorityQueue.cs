@@ -48,6 +48,17 @@ namespace Lonfee.AStar
             throw new InvalidOperationException("PriorityQueue is null.");
         }
 
+        public bool Contains(T value)
+        {
+            for (int i = 0; i < heap.Length; i++)
+            {
+                if (Equals(heap[i], value))
+                    return true;
+            }
+
+            return false;
+        }
+
         public void Clear()
         {
             Count = 0;

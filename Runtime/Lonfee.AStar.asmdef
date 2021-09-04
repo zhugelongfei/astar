@@ -1,6 +1,8 @@
 {
     "name": "Lonfee.AStar",
-    "references": [],
+    "references": [
+        "Lonfee.ObjectPool"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

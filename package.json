@@ -1,20 +1,14 @@
 {
-  "name": "com.lonfee.unity.package.astar",
+  "name": "com.lonfee.astar",
+  "version": "1.0.0",
   "displayName": "Lonfee A Star",
   "description": "A Star for unity.",
-  "version": "1.0.0",
-  "unity": "2019.4",
-  "relatedPackages": {},
-  "repository": {
-    "type": "git",
-    "url": "git@www.lonfee.cn:/git/astar.git",
-    "revision": "HEAD"
-  },
   "hideInEditor": false,
   "author": {
     "name": "Lonfee",
     "email": "18519720472@163.com"
   },
   "dependencies": {
+    "com.lonfee.objectpool": "1.0.0"
   }
 }

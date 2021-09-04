@@ -74,64 +74,13 @@ namespace Mehroz
     /// 	Implicit:	From double/long/string to Fraction
     /// 	Explicit:	From Fraction to double/string
     /// </summary>
-    public class Fraction
+    public struct Fraction
     {
         /// <summary>
-        /// Class attributes/members
+        /// Struct attributes/members
         /// </summary>
-        long m_iNumerator;
-        long m_iDenominator;
-
-        /// <summary>
-        /// Constructors
-        /// </summary>
-        public Fraction()
-        {
-            Initialize(0, 1);
-        }
-
-        public Fraction(long iWholeNumber)
-        {
-            Initialize(iWholeNumber, 1);
-        }
-
-        public Fraction(double dDecimalValue)
-        {
-            Fraction temp = ToFraction(dDecimalValue);
-            Initialize(temp.Numerator, temp.Denominator);
-        }
-
-        public Fraction(string strValue)
-        {
-            Fraction temp = ToFraction(strValue);
-            Initialize(temp.Numerator, temp.Denominator);
-        }
-
-        public Fraction(long iNumerator, long iDenominator)
-        {
-            Initialize(iNumerator, iDenominator);
-        }
-
-        public Fraction InitData(long iNumerator)
-        {
-            return InitData(iNumerator, 1);
-        }
-
-        public Fraction InitData(long iNumerator, long iDenominator)
-        {
-            Initialize(iNumerator, iDenominator);
-            return this;
-        }
-
-        /// <summary>
-        /// Internal function for constructors
-        /// </summary>
-        protected void Initialize(long iNumerator, long iDenominator)
-        {
-            Numerator = iNumerator;
-            Denominator = iDenominator;
-            ReduceFraction(this);
-        }
+        private long m_iNumerator;
+        private long m_iDenominator;
 
         /// <summary>
         /// Properites
@@ -139,7 +88,9 @@ namespace Mehroz
         public long Denominator
         {
             get
-            { return m_iDenominator; }
+            {
+                return m_iDenominator;
+            }
             set
             {
                 if (value != 0)
@@ -152,9 +103,13 @@ namespace Mehroz
         public long Numerator
         {
             get
-            { return m_iNumerator; }
+            {
+                return m_iNumerator;
+            }
             set
-            { m_iNumerator = value; }
+            {
+                m_iNumerator = value;
+            }
         }
 
         public long Value
@@ -166,12 +121,67 @@ namespace Mehroz
             }
         }
 
+        public Fraction(long iWholeNumber)
+        {
+            m_iNumerator = iWholeNumber;
+            m_iDenominator = 1;
+
+            ReduceFraction();
+        }
+
+        public Fraction(double dDecimalValue)
+        {
+            Fraction temp = ToFraction(dDecimalValue);
+
+            m_iNumerator = temp.m_iNumerator;
+            m_iDenominator = temp.m_iDenominator;
+
+            ReduceFraction();
+        }
+
+        public Fraction(string strValue)
+        {
+            Fraction temp = ToFraction(strValue);
+
+            m_iNumerator = temp.m_iNumerator;
+            m_iDenominator = temp.m_iDenominator;
+
+            ReduceFraction();
+        }
+
+        public Fraction(long iNumerator, long iDenominator)
+        {
+            if (iDenominator == 0)
+            {
+                throw new FractionException("Denominator cannot be assigned a ZERO Value");
+            }
+
+            m_iNumerator = iNumerator;
+            m_iDenominator = iDenominator;
+
+            ReduceFraction();
+        }
+
+        public Fraction InitData(long iNumerator)
+        {
+            return InitData(iNumerator, 1);
+        }
+
+        public Fraction InitData(long iNumerator, long iDenominator)
+        {
+            Numerator = iNumerator;
+            Denominator = iDenominator;
+
+            ReduceFraction();
+            return this;
+        }
+
         /// <summary>
         /// The function returns the current Fraction object as double
         /// </summary>
         public double ToDouble()
         {
-            return ((double)this.Numerator / this.Denominator);
+            return ((double)Numerator / Denominator);
         }
 
         /// <summary>
@@ -179,7 +189,7 @@ namespace Mehroz
         /// </summary>
         public float ToFloat()
         {
-            return ((float)this.Numerator / this.Denominator);
+            return ((float)Numerator / Denominator);
         }
 
         /// <summary>
@@ -188,10 +198,10 @@ namespace Mehroz
         public override string ToString()
         {
             string str;
-            if (this.Denominator == 1)
-                str = this.Numerator.ToString();
+            if (Denominator == 1)
+                str = Numerator.ToString();
             else
-                str = this.Numerator + "/" + this.Denominator;
+                str = Numerator + "/" + Denominator;
             return str;
         }
 
@@ -207,10 +217,10 @@ namespace Mehroz
                 if (strValue[i] == '/')
                     break;
 
-            if (i == strValue.Length)       // if string is not in the form of a fraction
-                                            // then it is double or integer
-                return (Convert.ToDouble(strValue));
-            //return ( ToFraction( Convert.ToDouble(strValue) ) );
+            // if string is not in the form of a fraction
+            // then it is double or integer
+            if (i == strValue.Length)
+                return Convert.ToDouble(strValue);
 
             // else string is in the form of Numerator/Denominator
             long iNumerator = Convert.ToInt64(strValue.Substring(0, i));
@@ -274,10 +284,7 @@ namespace Mehroz
         /// </summary>
         public Fraction Duplicate()
         {
-            Fraction frac = new Fraction();
-            frac.Numerator = Numerator;
-            frac.Denominator = Denominator;
-            return frac;
+            return new Fraction(Numerator, Denominator);
         }
 
         /// <summary>
@@ -290,7 +297,7 @@ namespace Mehroz
 
             long iNumerator = frac1.Denominator;
             long iDenominator = frac1.Numerator;
-            return (new Fraction(iNumerator, iDenominator));
+            return new Fraction(iNumerator, iDenominator);
         }
 
         /// <summary>
@@ -299,85 +306,85 @@ namespace Mehroz
         /// also includes relational and logical operators such as ==,!=,《,>,《=,>=
         /// </summary>
         public static Fraction operator -(Fraction frac1)
-        { return (Negate(frac1)); }
+        { return Negate(frac1); }
 
         public static Fraction operator +(Fraction frac1, Fraction frac2)
-        { return (Add(frac1, frac2)); }
+        { return Add(frac1, frac2); }
 
         public static Fraction operator +(int iNo, Fraction frac1)
-        { return (Add(frac1, new Fraction(iNo))); }
+        { return Add(frac1, new Fraction(iNo)); }
 
         public static Fraction operator +(Fraction frac1, int iNo)
-        { return (Add(frac1, new Fraction(iNo))); }
+        { return Add(frac1, new Fraction(iNo)); }
 
         public static Fraction operator +(double dbl, Fraction frac1)
-        { return (Add(frac1, Fraction.ToFraction(dbl))); }
+        { return Add(frac1, Fraction.ToFraction(dbl)); }
 
         public static Fraction operator +(Fraction frac1, double dbl)
-        { return (Add(frac1, Fraction.ToFraction(dbl))); }
+        { return Add(frac1, Fraction.ToFraction(dbl)); }
 
         public static Fraction operator -(Fraction frac1, Fraction frac2)
-        { return (Add(frac1, -frac2)); }
+        { return Add(frac1, -frac2); }
 
         public static Fraction operator -(int iNo, Fraction frac1)
-        { return (Add(-frac1, new Fraction(iNo))); }
+        { return Add(-frac1, new Fraction(iNo)); }
 
         public static Fraction operator -(Fraction frac1, int iNo)
-        { return (Add(frac1, -(new Fraction(iNo)))); }
+        { return Add(frac1, -(new Fraction(iNo))); }
 
         public static Fraction operator -(double dbl, Fraction frac1)
-        { return (Add(-frac1, Fraction.ToFraction(dbl))); }
+        { return Add(-frac1, Fraction.ToFraction(dbl)); }
 
         public static Fraction operator -(Fraction frac1, double dbl)
-        { return (Add(frac1, -Fraction.ToFraction(dbl))); }
+        { return Add(frac1, -Fraction.ToFraction(dbl)); }
 
         public static Fraction operator *(Fraction frac1, Fraction frac2)
-        { return (Multiply(frac1, frac2)); }
+        { return Multiply(frac1, frac2); }
 
         public static Fraction operator *(int iNo, Fraction frac1)
-        { return (Multiply(frac1, new Fraction(iNo))); }
+        { return Multiply(frac1, new Fraction(iNo)); }
 
         public static Fraction operator *(Fraction frac1, int iNo)
-        { return (Multiply(frac1, new Fraction(iNo))); }
+        { return Multiply(frac1, new Fraction(iNo)); }
 
         public static Fraction operator *(double dbl, Fraction frac1)
-        { return (Multiply(frac1, Fraction.ToFraction(dbl))); }
+        { return Multiply(frac1, Fraction.ToFraction(dbl)); }
 
         public static Fraction operator *(Fraction frac1, double dbl)
-        { return (Multiply(frac1, Fraction.ToFraction(dbl))); }
+        { return Multiply(frac1, Fraction.ToFraction(dbl)); }
 
         public static Fraction operator /(Fraction frac1, Fraction frac2)
-        { return (Multiply(frac1, Inverse(frac2))); }
+        { return Multiply(frac1, Inverse(frac2)); }
 
         public static Fraction operator /(int iNo, Fraction frac1)
-        { return (Multiply(Inverse(frac1), new Fraction(iNo))); }
+        { return Multiply(Inverse(frac1), new Fraction(iNo)); }
 
         public static Fraction operator /(Fraction frac1, int iNo)
-        { return (Multiply(frac1, Inverse(new Fraction(iNo)))); }
+        { return Multiply(frac1, Inverse(new Fraction(iNo))); }
 
         public static Fraction operator /(double dbl, Fraction frac1)
-        { return (Multiply(Inverse(frac1), Fraction.ToFraction(dbl))); }
+        { return Multiply(Inverse(frac1), Fraction.ToFraction(dbl)); }
 
         public static Fraction operator /(Fraction frac1, double dbl)
-        { return (Multiply(frac1, Fraction.Inverse(Fraction.ToFraction(dbl)))); }
+        { return Multiply(frac1, Fraction.Inverse(Fraction.ToFraction(dbl))); }
 
         public static bool operator ==(Fraction frac1, Fraction frac2)
         { return frac1.Equals(frac2); }
 
         public static bool operator !=(Fraction frac1, Fraction frac2)
-        { return (!frac1.Equals(frac2)); }
+        { return !frac1.Equals(frac2); }
 
         public static bool operator ==(Fraction frac1, int iNo)
         { return frac1.Equals(new Fraction(iNo)); }
 
         public static bool operator !=(Fraction frac1, int iNo)
-        { return (!frac1.Equals(new Fraction(iNo))); }
+        { return !frac1.Equals(new Fraction(iNo)); }
 
         public static bool operator ==(Fraction frac1, double dbl)
         { return frac1.Equals(new Fraction(dbl)); }
 
         public static bool operator !=(Fraction frac1, double dbl)
-        { return (!frac1.Equals(new Fraction(dbl))); }
+        { return !frac1.Equals(new Fraction(dbl)); }
 
         public static bool operator <(Fraction frac1, Fraction frac2)
         { return frac1.Numerator * frac2.Denominator < frac2.Numerator * frac1.Denominator; }
@@ -417,7 +424,7 @@ namespace Mehroz
         public override bool Equals(object obj)
         {
             Fraction frac = (Fraction)obj;
-            return (Numerator == frac.Numerator && Denominator == frac.Denominator);
+            return Numerator == frac.Numerator && Denominator == frac.Denominator;
         }
 
         /// <summary>
@@ -425,7 +432,7 @@ namespace Mehroz
         /// </summary>
         public override int GetHashCode()
         {
-            return (Convert.ToInt32((Numerator ^ Denominator) & 0xFFFFFFFF));
+            return Convert.ToInt32((Numerator ^ Denominator) & 0xFFFFFFFF);
         }
 
         /// <summary>
@@ -450,7 +457,7 @@ namespace Mehroz
                 {
                     long iNumerator = frac1.Numerator * frac2.Denominator + frac2.Numerator * frac1.Denominator;
                     long iDenominator = frac1.Denominator * frac2.Denominator;
-                    return (new Fraction(iNumerator, iDenominator));
+                    return new Fraction(iNumerator, iDenominator);
                 }
             }
             catch (OverflowException)
@@ -471,7 +478,7 @@ namespace Mehroz
                 {
                     long iNumerator = frac1.Numerator * frac2.Numerator;
                     long iDenominator = frac1.Denominator * frac2.Denominator;
-                    return (new Fraction(iNumerator, iDenominator));
+                    return new Fraction(iNumerator, iDenominator);
                 }
             }
             catch (OverflowException)
@@ -510,25 +517,25 @@ namespace Mehroz
         /// The function reduces(simplifies) a Fraction object by dividing both its numerator 
         /// and denominator by their GCD
         /// </summary>
-        public static void ReduceFraction(Fraction frac)
+        public void ReduceFraction()
         {
             try
             {
-                if (frac.Numerator == 0)
+                if (Numerator == 0)
                 {
-                    frac.Denominator = 1;
+                    Denominator = 1;
                     return;
                 }
 
-                long iGCD = GCD(frac.Numerator, frac.Denominator);
-                frac.Numerator /= iGCD;
-                frac.Denominator /= iGCD;
+                long iGCD = GCD(Numerator, Denominator);
+                Numerator /= iGCD;
+                Denominator /= iGCD;
 
-                if (frac.Denominator < 0)   // if -ve sign in denominator
+                if (Denominator < 0)   // if -ve sign in denominator
                 {
                     //pass -ve sign to numerator
-                    frac.Numerator *= -1;
-                    frac.Denominator *= -1;
+                    Numerator *= -1;
+                    Denominator *= -1;
                 }
             }   // end try
             catch (Exception exp)
@@ -556,4 +563,4 @@ namespace Mehroz
     }   //end class FractionException
 
 
-}	//end namespace Mehroz
+}   //end namespace Mehroz
