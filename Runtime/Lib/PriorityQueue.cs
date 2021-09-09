@@ -1,22 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Lonfee.AStar
 {
-    public class PriorityQueue<T>
+    public class PriorityQueue<T> where T : IComparable<T>
     {
-        private IComparer<T> comparer;
-        private T[] heap;
+        public T[] heap;
 
         public int Count { get; private set; }
 
-        public PriorityQueue() : this(null) { }
-        public PriorityQueue(int capacity) : this(capacity, null) { }
-        public PriorityQueue(IComparer<T> comparer) : this(16, comparer) { }
+        public PriorityQueue() : this(16) { }
 
-        public PriorityQueue(int capacity, IComparer<T> comparer)
+        public PriorityQueue(int capacity)
         {
-            this.comparer = (comparer == null) ? Comparer<T>.Default : comparer;
             this.heap = new T[capacity];
         }
 
@@ -48,17 +43,6 @@ namespace Lonfee.AStar
             throw new InvalidOperationException("PriorityQueue is null.");
         }
 
-        public bool Contains(T value)
-        {
-            for (int i = 0; i < heap.Length; i++)
-            {
-                if (Equals(heap[i], value))
-                    return true;
-            }
-
-            return false;
-        }
-
         public void Clear()
         {
             Count = 0;
@@ -73,7 +57,7 @@ namespace Lonfee.AStar
             T value = heap[childIndex];
 
             for (int parentIndex = childIndex >> 1;
-                childIndex > 0 && comparer.Compare(value, heap[parentIndex]) < 0;
+                childIndex > 0 && value.CompareTo(heap[parentIndex]) < 0;
                 childIndex = parentIndex, parentIndex = parentIndex >> 1)
             {
                 heap[childIndex] = heap[parentIndex];
@@ -88,10 +72,10 @@ namespace Lonfee.AStar
 
             for (int n2 = n << 1; n2 < Count; n = n2, n2 = n2 << 1)
             {
-                if (n2 + 1 < Count && comparer.Compare(heap[n2 + 1], heap[n2]) < 0)
+                if (n2 + 1 < Count && heap[n2 + 1].CompareTo(heap[n2]) < 0)
                     n2++;
 
-                if (comparer.Compare(value, heap[n2]) <= 0)
+                if (value.CompareTo(heap[n2]) <= 0)
                     break;
 
                 heap[n] = heap[n2];

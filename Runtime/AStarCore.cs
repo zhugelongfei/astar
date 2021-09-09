@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Mehroz;
+using System;
 using Lonfee.ObjectPool;
-using Mehroz;
+using System.Collections.Generic;
 
 namespace Lonfee.AStar
 {
@@ -11,20 +11,19 @@ namespace Lonfee.AStar
 
         private const int SLANT_CONSUME = 14;
         private const int STRAIGHT_CONSUME = 10;
+        private const int DIR_STRAIGHT_START_INDEX = 4;
+        private const int DIR_SLANT_END_INDEX = 4;
+        private const int DIR_LENGTH = 8;
 
-        private PriorityQueue<Node> openQueue = new PriorityQueue<Node>(new NodeComparator());
-        private Dictionary<int, Node> openDic = new Dictionary<int, Node>();
-        private Dictionary<int, Node> closeDic = new Dictionary<int, Node>();
-
-        private ObjectPool<Node> nodePool = new ObjectPool_DefaultFactory<Node>();
+        private PriorityQueue<Node> openQueue;
+        private Dictionary<int, Node> openDic;
+        private Dictionary<int, Node> closeDic;
+        private ObjectPool<Node> nodePool;
 
         private CheckIsBlock checkIsBlockFunction = null;
 
         private IAstarDebug debugTools = null;
 
-        private const int DIR_STRAIGHT_START_INDEX = 4;
-        private const int DIR_SLANT_END_INDEX = 4;
-        private const int DIR_LENGTH = 8;
         private int dirStartIndex = 0;
         private int[,] directionValue = new int[,]
         {
@@ -41,14 +40,19 @@ namespace Lonfee.AStar
             { 1, 0 },
         };
 
-        public AStarCore(CheckIsBlock checkIsBlockFunction, bool canSlantMove, IAstarDebug debugTools)
+        public AStarCore(CheckIsBlock checkIsBlockFunction, CapacitySize sizeInfo, bool canSlantMove = false, IAstarDebug debugTools = null)
         {
-            this.checkIsBlockFunction = checkIsBlockFunction;
-            this.debugTools = debugTools;
-            dirStartIndex = canSlantMove ? 0 : DIR_STRAIGHT_START_INDEX;
-
             if (checkIsBlockFunction == null)
-                throw new NullReferenceException("Check point is block function is null.");
+                throw new NullReferenceException("Check block function can not be null.");
+
+            this.checkIsBlockFunction = checkIsBlockFunction;
+            this.dirStartIndex = canSlantMove ? 0 : DIR_STRAIGHT_START_INDEX;
+            this.debugTools = debugTools;
+
+            nodePool = new ObjectPool_DefaultFactory<Node>(sizeInfo.poolInitSize, 1, sizeInfo.poolMaxSize);
+            openQueue = new PriorityQueue<Node>(sizeInfo.openSetSize);
+            openDic = new Dictionary<int, Node>(sizeInfo.openSetSize);
+            closeDic = new Dictionary<int, Node>(sizeInfo.closeSetSize);
         }
 
         public List<Point2> FindPath(int startX, int startY, int endX, int endY)
@@ -60,11 +64,6 @@ namespace Lonfee.AStar
             // is already in end ?
             if (startX == endX && startY == endY)
                 return null;
-
-#if DEBUG_LONFEE_ASTAR
-            if (debugTools != null)
-                debugTools.Init();
-#endif
 
             // push start point to open set
             Node startNode = nodePool.Pop();
@@ -84,15 +83,14 @@ namespace Lonfee.AStar
                 // is target ?
                 if (tempNode.x == endX && tempNode.y == endY)
                 {
-#if DEBUG_LONFEE_ASTAR
+                    List<Point2> result = GetTotalPoint(tempNode);
+
                     if (debugTools != null)
                     {
-                        debugTools.SetCloseNodeList(closeDic.Values);
-                        debugTools.SetPathNode(tempNode);
+                        SetCloseToDebug();
+                        SetOpenToDebug();
+                        SetPathToDebug(result);
                     }
-#endif
-
-                    List<Point2> result = GetTotalPoint(tempNode);
 
                     // clear
                     openDic.Clear();
@@ -158,10 +156,10 @@ namespace Lonfee.AStar
                 }
             }
 
-#if DEBUG_LONFEE_ASTAR
             if (debugTools != null)
-                debugTools.SetCloseNodeList(closeDic.Values);
-#endif
+            {
+                SetCloseToDebug();
+            }
 
             return null;
         }
@@ -175,6 +173,7 @@ namespace Lonfee.AStar
         private Node PopAndOpenPoint()
         {
             Node tempNode = openQueue.Pop();
+
             openDic.Remove(tempNode.Key);
             AddToCloseDic(tempNode);
 
@@ -216,6 +215,7 @@ namespace Lonfee.AStar
                 temp = temp.parent;
             }
 
+            allNodeList.Reverse();
             return allNodeList;
         }
 
@@ -224,8 +224,6 @@ namespace Lonfee.AStar
         /// <summary>
         /// Folyd Moothness Algorithm
         /// </summary>
-        /// <param name="node">last node</param>
-        /// <returns>Point set</returns>
         public void FolydMoothnessPath(List<Point2> allPointList)
         {
             if (allPointList == null || allPointList.Count <= 2)
@@ -235,19 +233,18 @@ namespace Lonfee.AStar
             FilterStraightLine(allPointList);
 
             // 2: filter cross point waklable
-            int len = allPointList.Count;
-            for (int i = len - 1; i > 0; i--)
+            // Note: adjacent point is always can walkable
+            for (int i = allPointList.Count - 1; i >= 2; i--)
             {
-                for (int j = 0; j <= i - 1; j++)
+                for (int j = i - 2; j >= 0; j--)
                 {
                     if (CheckCrossPointWalkable(allPointList[i], allPointList[j]))
                     {
-                        allPointList.RemoveRange(j + 1, i - j - 1);
-                        //for (int k = i - 1; k > j; k--)
-                        //{
-                        //    allPointList.RemoveAt(k);
-                        //}
-                        i = j;
+                        allPointList.RemoveRange(j + 1, 1);
+                        i--;
+                    }
+                    else
+                    {
                         break;
                     }
                 }
@@ -260,18 +257,18 @@ namespace Lonfee.AStar
                 return;
 
             int len = path.Count;
-            Point2 vector = path[len - 1] - path[len - 2];
-            Point2 tempvector;
+            Point2 curDir = path[len - 1] - path[len - 2];
             for (int i = len - 3; i >= 0; i--)
             {
-                tempvector = path[i + 1] - path[i];
-                if ((vector.x == 0 && tempvector.x == 0) || (vector.y == 0 && tempvector.y == 0))
+                Point2 nextDir = path[i + 1] - path[i];
+
+                if (curDir == nextDir)
                 {
                     path.RemoveAt(i + 1);
                 }
                 else
                 {
-                    vector = tempvector;
+                    curDir = nextDir;
                 }
             }
         }
@@ -298,7 +295,7 @@ namespace Lonfee.AStar
             {
                 // x axis translation
                 int x = endPoint.x;
-                for (int y = minY; y <= maxY; y++)
+                for (int y = minY + 1; y < maxY; y++)
                 {
                     AddPoint2(pointList, x, y);
                 }
@@ -307,7 +304,7 @@ namespace Lonfee.AStar
             {
                 // y axis translation
                 int y = endPoint.y;
-                for (int x = minX; x <= maxX; x++)
+                for (int x = minX + 1; x < maxX; x++)
                 {
                     AddPoint2(pointList, x, y);
                 }
@@ -315,7 +312,6 @@ namespace Lonfee.AStar
             else
             {
                 // slant
-                //使用直线的斜率公式计算交点
                 float x1 = startPoint.x + 0.5f;
                 float y1 = startPoint.y + 0.5f;
                 float x2 = endPoint.x + 0.5f;
@@ -324,17 +320,17 @@ namespace Lonfee.AStar
                 long dx = (long)(x2 * 10 - x1 * 10);
                 long dy = (long)(y2 * 10 - y1 * 10);
 
-                //1:求出直线公式y=kx+b
+                // 1: y = kx + b
                 Fraction K = new Fraction(dy, dx);
                 Fraction K2 = new Fraction(dx, dy);
                 Fraction B = new Fraction((long)(y1 * 10), 10) - K * new Fraction((long)(x1 * 10), 10);
 
                 Fraction tempFrac = new Fraction();
 
-                //2:先进行x方向递增，算出位置
+                // 2: translation x
                 for (int x = minX; x <= maxX; x++)
                 {
-                    float folydY = ((K * (tempFrac.InitData(x)) + B).ToFloat());
+                    float folydY = (K * tempFrac.InitData(x) + B).ToFloat();
                     int y = (int)folydY;
 
                     if (y >= minY && y <= maxY)
@@ -359,7 +355,7 @@ namespace Lonfee.AStar
                     }
                 }
 
-                //3:再进行y方向递增，算出位置
+                // 3: translation y
                 for (int y = minY; y <= maxY; y++)
                 {
                     float folydX = ((tempFrac.InitData(y) - B) * K2).ToFloat();
@@ -367,7 +363,7 @@ namespace Lonfee.AStar
 
                     if (x >= minX && x <= maxX)
                     {
-                        //证明：不在线段的延长线上
+                        // on the line
                         AddPoint2(pointList, x, y);
 
                         if (x == folydX)
@@ -419,8 +415,49 @@ namespace Lonfee.AStar
             }
         }
 
-#endregion
+        #endregion
 
+        #region Debug
+
+        public void SetCloseToDebug()
+        {
+            if (debugTools == null)
+                return;
+
+            List<Point2> closeList = new List<Point2>(closeDic.Values.Count);
+            foreach (var item in closeDic.Values)
+            {
+                closeList.Add(new Point2(item.x, item.y));
+            }
+
+            debugTools.SetClosePointCollection(closeList);
+        }
+
+        public void SetOpenToDebug()
+        {
+            if (debugTools == null)
+                return;
+
+            List<Point2> openList = new List<Point2>(openDic.Values.Count);
+            foreach (var item in openDic.Values)
+            {
+                openList.Add(new Point2(item.x, item.y));
+            }
+
+            debugTools.SetOpenPointCollection(openList);
+        }
+
+        public void SetPathToDebug(List<Point2> pathList)
+        {
+            if (debugTools == null)
+                return;
+
+            List<Point2> result = new List<Point2>(pathList);
+
+            debugTools.SetPath(result);
+        }
+
+        #endregion
 
     }
 }

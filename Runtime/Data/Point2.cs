@@ -26,11 +26,6 @@
             return new Point2(a.x + b.x, a.y + b.y);
         }
 
-        public static Point2 operator *(Point2 p, int val)
-        {
-            return new Point2(p.x * val, p.y * val);
-        }
-
         public static bool operator ==(Point2 a, Point2 b)
         {
             return a.x == b.x && a.y == b.y;
@@ -40,5 +35,24 @@
         {
             return a.x != b.x || a.y != b.y;
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Point2 point && x == point.x && y == point.y;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -464793961;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            return hashCode;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Point2({0}, {1})", x, y);
+        }
+
     }
 }

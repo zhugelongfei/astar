@@ -1,23 +1,14 @@
-﻿namespace Lonfee.AStar
+﻿using System;
+
+namespace Lonfee.AStar
 {
-    public class Node : Lonfee.ObjectPool.IPoolObject
+    internal class Node : ObjectPool.IPoolObject, IComparable<Node>
     {
         public int x;
         public int y;
 
-        /// <summary>
-        /// 从初始点到N点的实际消耗
-        /// </summary>
         public int g;
-
-        /// <summary>
-        /// 从N点到终点的预估消耗
-        /// </summary>
         public int h;
-
-        /// <summary>
-        /// 从初始点经过N点到终点的预估消耗 F = G + H
-        /// </summary>
         public int f;
 
         public Node parent;
@@ -58,6 +49,16 @@
         public void OnDestroy()
         {
 
+        }
+
+        public int CompareTo(Node other)
+        {
+            return this.f.CompareTo(other.f);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Node(x:{0}, y:{1}, g:{2}, h:{3}, f:{4})", x, y, g, h, f);
         }
     }
 }

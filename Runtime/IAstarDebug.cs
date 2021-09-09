@@ -4,12 +4,10 @@ namespace Lonfee.AStar
 {
     public interface IAstarDebug
     {
-        void Init();
+        void SetPath(ICollection<Point2> nodeList);
 
-        void SetPathNode(Node node);
+        void SetClosePointCollection(ICollection<Point2> nodeList);
 
-        void SetCloseNodeList(ICollection<Node> nodeList);
-
-        void Log(string str);
+        void SetOpenPointCollection(ICollection<Point2> nodeList);
     }
 }
