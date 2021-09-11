@@ -290,7 +290,7 @@ namespace Lonfee.AStar
             AddPoint2(pointList, startPoint.x, startPoint.y);
             AddPoint2(pointList, endPoint.x, endPoint.y);
 
-            //--2 add cross points
+            // 2: add cross points
             if (endPoint.x == startPoint.x)
             {
                 // x axis translation
@@ -324,9 +324,11 @@ namespace Lonfee.AStar
                 Fraction K = new Fraction(dy, dx);
                 Fraction K2 = new Fraction(dx, dy);
                 Fraction B = new Fraction((long)(y1 * 10), 10) - K * new Fraction((long)(x1 * 10), 10);
+                Fraction B2 = new Fraction((long)(x1 * 10), 10) - K2 * new Fraction((long)(y1 * 10), 10);
 
                 Fraction tempFrac = new Fraction();
 
+                float width = 0.28f;
                 // 2: translation x
                 for (int x = minX; x <= maxX; x++)
                 {
@@ -336,21 +338,17 @@ namespace Lonfee.AStar
                     if (y >= minY && y <= maxY)
                     {
                         // on the line
-                        AddPoint2(pointList, x, y);
-
-                        if (y == folydY)
+                        int vertexY = (int)Math.Round(folydY);
+                        float disSquare = DisWithPointToLine(K, B, x, vertexY);
+                        if (disSquare < width * width)
                         {
-                            //证明：刚好是顶点
-                            AddAroundPoint(pointList, x, y, minX, minY);
+                            // the unit is so width...
+                            AddAroundPoint(pointList, x, vertexY, minX, minY);
                         }
                         else
                         {
-                            //不是顶点，检测左边的格子
-                            if (x - 1 >= minX)
-                            {
-                                //证明：与格子的x边的交点（X增长，所以是与X边交点），也要检测这个点左边的格子
-                                AddPoint2(pointList, x - 1, y);
-                            }
+                            // check self
+                            AddPoint2(pointList, x, y);
                         }
                     }
                 }
@@ -364,27 +362,23 @@ namespace Lonfee.AStar
                     if (x >= minX && x <= maxX)
                     {
                         // on the line
-                        AddPoint2(pointList, x, y);
+                        int vertexX = (int)Math.Round(folydX);
+                        float disSquare = DisWithPointToLine(K, B, vertexX, y);
+                        UnityEngine.Debug.LogError(string.Format("x:{0}, y:{1}, dis:{2}", vertexX, y, Math.Sqrt(disSquare)));
 
-                        if (x == folydX)
+                        if (disSquare < width * width)
                         {
-                            //证明：刚好是顶点
-                            AddAroundPoint(pointList, x, y, minX, minY);
+                            AddAroundPoint(pointList, vertexX, y, minX, minY);
                         }
                         else
                         {
-                            //不是顶点，检测下边的格子
-                            if (y - 1 >= minY)
-                            {
-                                //证明：与格子的y边的交点（y增长，所以是与y边交点），也要检测这个点下边的格子
-                                AddPoint2(pointList, x, y - 1);
-                            }
+                            AddPoint2(pointList, x, y);
                         }
                     }
                 }
             }
 
-            //--3:逐个扫描每个点
+            // 3: check cross point is block
             foreach (Point2 point in pointList.Values)
             {
                 if (checkIsBlockFunction(point.x, point.y))
@@ -392,6 +386,15 @@ namespace Lonfee.AStar
             }
 
             return true;
+        }
+
+        private float DisWithPointToLine(Fraction k, Fraction b, Fraction xPos, Fraction yPos)
+        {
+            Fraction disNum = (k * xPos - yPos + b).Abs();
+
+            Fraction dis = disNum * disNum / (k * k + 1);
+
+            return dis.ToFloat();
         }
 
         private void AddAroundPoint(Dictionary<int, Point2> pointList, int x, int y, int minx, int miny)

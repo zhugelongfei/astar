@@ -205,6 +205,11 @@ namespace Mehroz
             return str;
         }
 
+        public Fraction Abs()
+        {
+            return new Fraction(Math.Abs(Numerator), Math.Abs(Denominator));
+        }
+
         /// <summary>
         /// The function takes an string as an argument and returns its corresponding reduced fraction
         /// the string can be an in the form of and integer, double or fraction.
