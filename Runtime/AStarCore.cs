@@ -224,7 +224,7 @@ namespace Lonfee.AStar
         /// <summary>
         /// Folyd Moothness Algorithm
         /// </summary>
-        public void FolydMoothnessPath(List<Point2> allPointList)
+        public void FolydMoothnessPath(List<Point2> allPointList, float unitRadius = 0.2f)
         {
             if (allPointList == null || allPointList.Count <= 2)
                 return;
@@ -238,7 +238,7 @@ namespace Lonfee.AStar
             {
                 for (int j = i - 2; j >= 0; j--)
                 {
-                    if (CheckCrossPointWalkable(allPointList[i], allPointList[j]))
+                    if (CheckCrossPointWalkable(allPointList[i], allPointList[j], unitRadius))
                     {
                         allPointList.RemoveRange(j + 1, 1);
                         i--;
@@ -273,7 +273,7 @@ namespace Lonfee.AStar
             }
         }
 
-        private bool CheckCrossPointWalkable(Point2 startPoint, Point2 endPoint)
+        private bool CheckCrossPointWalkable(Point2 startPoint, Point2 endPoint, float unitRadius)
         {
             if (startPoint == endPoint)
                 return true;
@@ -328,7 +328,6 @@ namespace Lonfee.AStar
 
                 Fraction tempFrac = new Fraction();
 
-                float width = 0.28f;
                 // 2: translation x
                 for (int x = minX; x <= maxX; x++)
                 {
@@ -340,15 +339,19 @@ namespace Lonfee.AStar
                         // on the line
                         int vertexY = (int)Math.Round(folydY);
                         float disSquare = DisWithPointToLine(K, B, x, vertexY);
-                        if (disSquare < width * width)
+                        if (disSquare > unitRadius * unitRadius)
                         {
-                            // the unit is so width...
-                            AddAroundPoint(pointList, x, vertexY, minX, minY);
+                            // this unit is not fat, so only check self and left node :)
+                            AddPoint2(pointList, x, y);
+
+                            // allright, point(x, y) is on x asix's whole num, so you must pass the left node
+                            if (x - 1 >= minX)
+                                AddPoint2(pointList, x - 1, y);
                         }
                         else
                         {
-                            // check self
-                            AddPoint2(pointList, x, y);
+                            // the unit is so fat...
+                            AddAroundPoint(pointList, x, vertexY, minX, minY);
                         }
                     }
                 }
@@ -364,15 +367,17 @@ namespace Lonfee.AStar
                         // on the line
                         int vertexX = (int)Math.Round(folydX);
                         float disSquare = DisWithPointToLine(K, B, vertexX, y);
-                        UnityEngine.Debug.LogError(string.Format("x:{0}, y:{1}, dis:{2}", vertexX, y, Math.Sqrt(disSquare)));
 
-                        if (disSquare < width * width)
+                        if (disSquare > unitRadius * unitRadius)
                         {
-                            AddAroundPoint(pointList, vertexX, y, minX, minY);
+                            AddPoint2(pointList, x, y);
+
+                            if (y - 1 >= minY)
+                                AddPoint2(pointList, x, y - 1);
                         }
                         else
                         {
-                            AddPoint2(pointList, x, y);
+                            AddAroundPoint(pointList, vertexX, y, minX, minY);
                         }
                     }
                 }

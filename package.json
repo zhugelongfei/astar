@@ -1,14 +1,21 @@
 {
-  "name": "com.lonfee.astar",
-  "version": "1.0.0",
-  "displayName": "Lonfee A Star",
-  "description": "A Star for unity.",
-  "hideInEditor": false,
-  "author": {
-    "name": "Lonfee",
-    "email": "18519720472@163.com"
-  },
-  "dependencies": {
-    "com.lonfee.objectpool": "1.0.0"
-  }
+    "name": "com.lonfee.astar",
+    "version": "1.0.0",
+    "displayName": "Lonfee A Star",
+    "description": "A Star for unity.",
+    "hideInEditor": false,
+    "author": {
+        "name": "Lonfee",
+        "email": "18519720472@163.com"
+    },
+    "dependencies": {
+        "com.lonfee.objectpool": "1.0.0"
+    },
+    "samples": [
+        {
+            "displayName": "Sample",
+            "description": "Show a star path on ui",
+            "path": "Samples~/UIPath"
+        }
+    ]
 }
