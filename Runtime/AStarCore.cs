@@ -341,10 +341,9 @@ namespace Lonfee.AStar
                         float disSquare = DisWithPointToLine(K, B, x, vertexY);
                         if (disSquare > unitRadius * unitRadius)
                         {
-                            // this unit is not fat, so only check self and left node :)
                             AddPoint2(pointList, x, y);
 
-                            // allright, point(x, y) is on x asix's whole num, so you must pass the left node
+                            // allright, point(x, y) is on x asix's whole num, so you must cross the left node
                             if (x - 1 >= minX)
                                 AddPoint2(pointList, x - 1, y);
                         }
@@ -412,6 +411,8 @@ namespace Lonfee.AStar
 
             if (x - 1 >= minx && y - 1 >= miny)
                 AddPoint2(pointList, x - 1, y - 1);
+
+            AddPoint2(pointList, x, y);
         }
 
         private void AddPoint2(Dictionary<int, Point2> pointList, int x, int y)
