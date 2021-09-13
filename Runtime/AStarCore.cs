@@ -324,7 +324,6 @@ namespace Lonfee.AStar
                 Fraction K = new Fraction(dy, dx);
                 Fraction K2 = new Fraction(dx, dy);
                 Fraction B = new Fraction((long)(y1 * 10), 10) - K * new Fraction((long)(x1 * 10), 10);
-                Fraction B2 = new Fraction((long)(x1 * 10), 10) - K2 * new Fraction((long)(y1 * 10), 10);
 
                 Fraction tempFrac = new Fraction();
 
@@ -394,25 +393,28 @@ namespace Lonfee.AStar
 
         private float DisWithPointToLine(Fraction k, Fraction b, Fraction xPos, Fraction yPos)
         {
-            Fraction disNum = (k * xPos - yPos + b).Abs();
-
-            Fraction dis = disNum * disNum / (k * k + 1);
+            Fraction dis = (k * xPos - yPos + b).Abs() / (k * k + 1);
 
             return dis.ToFloat();
         }
 
         private void AddAroundPoint(Dictionary<int, Point2> pointList, int x, int y, int minx, int miny)
         {
+            // left
             if (x - 1 >= minx)
                 AddPoint2(pointList, x - 1, y);
 
+            // top
             if (y - 1 >= miny)
                 AddPoint2(pointList, x, y - 1);
 
+            // left top
             if (x - 1 >= minx && y - 1 >= miny)
                 AddPoint2(pointList, x - 1, y - 1);
 
-            AddPoint2(pointList, x, y);
+            // self
+            if (x >= minx && y >= miny)
+                AddPoint2(pointList, x, y);
         }
 
         private void AddPoint2(Dictionary<int, Point2> pointList, int x, int y)
