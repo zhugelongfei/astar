@@ -349,7 +349,7 @@ namespace Lonfee.AStar
                         else
                         {
                             // the unit is so fat...
-                            AddAroundPoint(pointList, x, vertexY, minX, minY);
+                            AddAroundPoint(pointList, x, vertexY, minX, minY, maxX, maxY);
                         }
                     }
                 }
@@ -375,7 +375,7 @@ namespace Lonfee.AStar
                         }
                         else
                         {
-                            AddAroundPoint(pointList, vertexX, y, minX, minY);
+                            AddAroundPoint(pointList, vertexX, y, minX, minY, maxX, maxY);
                         }
                     }
                 }
@@ -393,19 +393,21 @@ namespace Lonfee.AStar
 
         private float DisWithPointToLine(Fraction k, Fraction b, Fraction xPos, Fraction yPos)
         {
-            Fraction dis = (k * xPos - yPos + b).Abs() / (k * k + 1);
+            Fraction disNumator = (k * xPos - yPos + b).Abs();
+
+            Fraction dis = disNumator * disNumator / (k * k + 1);
 
             return dis.ToFloat();
         }
 
-        private void AddAroundPoint(Dictionary<int, Point2> pointList, int x, int y, int minx, int miny)
+        private void AddAroundPoint(Dictionary<int, Point2> pointList, int x, int y, int minx, int miny, int maxx, int maxy)
         {
             // left
-            if (x - 1 >= minx)
+            if (x - 1 >= minx && y >= miny && y <= maxy)
                 AddPoint2(pointList, x - 1, y);
 
             // top
-            if (y - 1 >= miny)
+            if (y - 1 >= miny && x >= minx && x <= maxx)
                 AddPoint2(pointList, x, y - 1);
 
             // left top
@@ -413,7 +415,7 @@ namespace Lonfee.AStar
                 AddPoint2(pointList, x - 1, y - 1);
 
             // self
-            if (x >= minx && y >= miny)
+            if (x >= minx && x <= maxx && y >= miny & y <= maxy)
                 AddPoint2(pointList, x, y);
         }
 
